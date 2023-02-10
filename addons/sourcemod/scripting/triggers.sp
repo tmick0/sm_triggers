@@ -41,8 +41,8 @@ public OnPluginStart()
     RegConsoleCmd("say", Trigger);
     RegConsoleCmd("say_team", Trigger);
   
-    RegAdminCmd("triggers_reload", ReloadTriggers, ADMFLAG_CONFIG, "Reloads the commandlist", "", FCVAR_PLUGIN);
-    CreateConVar("triggers_version", PLUGIN_VERSION, "The version of Triggers installed", FCVAR_REPLICATED | FCVAR_PLUGIN | FCVAR_NOTIFY | FCVAR_SPONLY);
+    RegAdminCmd("triggers_reload", ReloadTriggers, ADMFLAG_CONFIG, "Reloads the commandlist", "");
+    CreateConVar("triggers_version", PLUGIN_VERSION, "The version of Triggers installed", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_SPONLY);
     
     new Handle:hRconFlags = CreateConVar("triggers_rcon", "rz");
     if(hRconFlags == INVALID_HANDLE)
@@ -170,7 +170,7 @@ public Action:Trigger(client, args)
         strcopy(sCmd, sizeof(sCmd), sCmd[iSindex+1]);
     }
     
-    SetPackPosition( hDp, 0 );
+    SetPackPosition( hDp, view_as<DataPackPos>(0) );
     iFlags = TriggersFlag:ReadPackCell( hDp );
     new iRconFlagsSet = ReadPackCell( hDp );
     
@@ -224,7 +224,7 @@ public Action:Trigger(client, args)
                 
                 /* Player Steam ID */
                 case 's':{
-                    GetClientAuthString(client, sBuffer, sizeof(sBuffer));
+                    GetClientAuthId(client, AuthId_Steam2, sBuffer, sizeof(sBuffer));
                     
                     ReplaceStringEx(sReplace[iTemp], sizeof(sReplace) - iTemp, "%s", sBuffer);
                 }
