@@ -137,14 +137,19 @@ public Action:Trigger(client, args)
     new iSindex;
     new TriggersFlag:iFlags; // Flags for the trigger
     new iRconFlags; // RCON flags for the trigger
+
+    //   -1 : arguments should be fetched from GetCmdArg
+    // >= 0 : args from sCmd starting at this index
+    int iCommandArgsIndex = -1;
     
     // Get the command
     if( args >= 2 )
         GetCmdArg(1, sCmd, sizeof(sCmd));
     else {
         GetCmdArgString(sCmd, sizeof(sCmd));
-        
-        if(StrContains(sCmd, " ") != -1)
+
+        iCommandArgsIndex = StrContains(sCmd, " ");
+        if(iCommandArgsIndex != -1)
             sCmd[StrContains(sCmd, " ")] = '\0';
         
         if(sCmd[0] == '"' && sCmd[strlen(sCmd)-1] == '"')
@@ -299,6 +304,47 @@ public Action:Trigger(client, args)
                      * than to write it slower and less bug-tested in Pawn.
                      */
                     ReplaceStringEx(sReplace[iTemp], sizeof(sReplace) - iTemp, sConvar, sBuffer);
+                }
+
+                /* Command argument */
+                case 'a':{
+                    if(sReplace[iTemp+2] != '[')
+                    {
+                        break;
+                    }
+                    
+                    decl iFoundEnd;
+                    if((iFoundEnd = FindCharInString(sReplace[iTemp+2], ']')) == -1
+                        || iFoundEnd <= 1)
+                    {
+                        break;
+                    }
+                    
+                    new iSizeOfIndex = iFoundEnd+3+1+1;
+                    decl String:sIndex[iSizeOfIndex];
+                    
+                    strcopy(sIndex[3], iSizeOfIndex-5, sReplace[iTemp+3]);
+                    int iIndex = StringToInt(sIndex[3]);
+                    
+                    sIndex[0] = '%';
+                    sIndex[1] = 'a';
+                    sIndex[2] = '[';
+                    sIndex[iSizeOfIndex-3] = ']';
+                    sIndex[iSizeOfIndex-2] = '\0';
+                    
+                    char sArgument[256];
+                    if (iCommandArgsIndex < 0) {
+                        GetCmdArg(iIndex + 2, sArgument, 256);
+                    } else {
+                        int offset = iIndex;
+                        for (int i = 0; i < iIndex && offset != -1; ++i) {
+                            offset = StrContains(sCmd[iCommandArgsIndex + offset + 1], " ");
+                        }
+                        int nextOffset = StrContains(sCmd[iCommandArgsIndex + offset + 1], " ");
+                        strcopy(sArgument, nextOffset < 0 ? 256 : nextOffset - offset, sCmd[iCommandArgsIndex + offset + 1]);
+                    }
+                    
+                    ReplaceStringEx(sReplace[iTemp], sizeof(sReplace) - iTemp, sArgument, sBuffer);
                 }
                 
                 default:
